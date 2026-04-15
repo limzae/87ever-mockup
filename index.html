@@ -294,7 +294,10 @@ function App() {
     var modeS    = useState('customer'); var mode=modeS[0],setMode=modeS[1];
     var prodsS   = useState(DEMO);       var products=prodsS[0],setProducts=prodsS[1];
     var selPS    = useState(DEMO[0].id); var selProd=selPS[0],setSelProd=selPS[1];
-    var elemsS   = useState([]);         var elems=elemsS[0],setElems=elemsS[1];
+    var elemsS   = useState([]);
+    // side-aware elems: 정면/후면 각각 별도 상태
+    var elems = side==='front' ? elemsFront : elemsBack;
+    function setElems(fn){ if(side==='front') setElemsFront(fn); else setElemsBack(fn); }
     var selIdS   = useState(null);       var selId=selIdS[0],setSelId=selIdS[1];
     var modalS   = useState(false);      var showModal=modalS[0],setShowModal=modalS[1];
     var newNameS = useState('');         var newName=newNameS[0],setNewName=newNameS[1];
