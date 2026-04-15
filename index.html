@@ -569,11 +569,25 @@ function App() {
             var url = canvas.toDataURL(mime, 0.93);
             var d = new Date();
             var ds = d.getFullYear()+''+('0'+(d.getMonth()+1)).slice(-2)+''+('0'+d.getDate()).slice(-2);
-            var a = document.createElement('a');
-            a.download = '판촉에버_시안_'+ds+'.'+fmt;
-            a.href = url;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
-            toast('✅ '+fmt.toUpperCase()+' 파일로 저장되었습니다');
+            var filename = '판촉에버_시안_'+ds+'.'+fmt;
+            var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            if (isIOS) {
+                /* iOS Safari: <a download> 미지원 → 새 탭에서 열어 길게 눌러 저장 */
+                var win = window.open('', '_blank');
+                if (win) {
+                    win.document.write('<html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif}img{max-width:100%;border-radius:8px}p{color:#aaa;margin-top:16px;font-size:14px;text-align:center}</style></head><body><img src="'+url+'"><p>이미지를 길게 눌러 저장하세요 📥</p></body></html>');
+                    win.document.close();
+                    toast('✅ 새 탭에서 이미지를 길게 눌러 저장하세요');
+                } else {
+                    toast('⚠️ 팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요');
+                }
+            } else {
+                var a = document.createElement('a');
+                a.download = filename;
+                a.href = url;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                toast('✅ '+fmt.toUpperCase()+' 파일로 저장되었습니다');
+            }
             setExporting(false);
         }).catch(function(){ setExporting(false); toast('❌ 저장 중 오류가 발생했습니다'); });
     }
