@@ -335,6 +335,8 @@ function App() {
     useEffect(function(){ selProdRef.current=selProd; },[selProd]);
     useEffect(function(){ selIdRef.current=selId; },[selId]);
     useEffect(function(){ refsRef.current=refs; },[refs]);
+    useEffect(function(){ loadFromUrl(products); },[]);
+
     useEffect(function(){ zoneSelRef.current=zoneSel; },[zoneSel]);
 
     var prod  = products.find(function(p){ return p.id===selProd; });
@@ -344,6 +346,58 @@ function App() {
     var zone  = prod ? (_zonePresets ? _zonePresets[zoneSel] : prod.zone) : null;
 
     /* ── Undo ── */
+    function saveToUrl() {
+        var state = {
+            prodId: prod ? prod.id : null,
+            side: side,
+            zoneSel: zoneSel,
+            front: elemsFront.map(function(el){
+                // image 요소는 src 제외 (URL 크기 문제)
+                if(el.type==='img') return Object.assign({},el,{src:null});
+                return el;
+            }),
+            back: elemsBack.map(function(el){
+                if(el.type==='img') return Object.assign({},el,{src:null});
+                return el;
+            })
+        };
+        try {
+            var json = JSON.stringify(state);
+            var b64 = btoa(unescape(encodeURIComponent(json)));
+            var url = window.location.href.split('#')[0] + '#' + b64;
+            window.history.replaceState(null,'',url);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(function(){
+                    toast('🔗 공유 링크가 클립보드에 복사됐어요!');
+                });
+            } else {
+                // fallback
+                var ta = document.createElement('textarea');
+                ta.value = url; document.body.appendChild(ta);
+                ta.select(); document.execCommand('copy');
+                document.body.removeChild(ta);
+                toast('🔗 공유 링크가 클립보드에 복사됐어요!');
+            }
+        } catch(e) { toast('❌ 링크 생성 실패: '+e.message); }
+    }
+
+    function loadFromUrl(prods) {
+        var hash = window.location.hash.slice(1);
+        if (!hash) return;
+        try {
+            var json = decodeURIComponent(escape(atob(hash)));
+            var state = JSON.parse(json);
+            if (state.prodId && prods) {
+                var found = prods.find(function(p){ return p.id===state.prodId; });
+                if (found) setSelProd(state.prodId);
+            }
+            if (state.front && state.front.length) setElemsFront(state.front);
+            if (state.back  && state.back.length)  setElemsBack(state.back);
+            if (state.side)    setSide(state.side);
+            if (state.zoneSel) setZoneSel(state.zoneSel);
+        } catch(e) { /* invalid hash, ignore */ }
+    }
+
     function pushHistory() {
         historyRef.current.push(JSON.stringify(elemsRef.current));
         if (historyRef.current.length > 30) historyRef.current.shift();
@@ -1093,6 +1147,7 @@ function App() {
             h('div',null,h('h1',null,'시안 메이커'),h('small',null,'나만의 판촉물 디자인을 직접 만들어보세요'))
         ),
             h('div',{className:'header-right'},
+                h('button',{className:'undo-btn-hdr',onClick:saveToUrl,style:{background:'rgba(99,102,241,0.2)',borderColor:'rgba(99,102,241,0.5)',color:'#a5b4fc'}},'🔗 공유'),
                 mode==='customer'?h('button',{className:'undo-btn-hdr',onClick:undo,disabled:histLen===0},'↩ 되돌리기 ('+(histLen)+')'):'',
                 modeBtns
             )
