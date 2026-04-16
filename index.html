@@ -230,7 +230,15 @@ body { font-family: 'Noto Sans KR', sans-serif; background: #f0f2f5; height: 100
   .logo h1 { font-size: 13px; }
   .mode-btn { padding: 4px 8px; font-size: 10px; }
 }
-    </style>
+    
+.save-modal-bg { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
+.save-modal-img { max-width:100%; max-height:70vh; border-radius:10px; display:block; box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+.save-modal-hint { color:white; font-size:15px; font-weight:600; margin-top:18px; text-align:center; }
+.save-modal-sub { color:rgba(255,255,255,0.6); font-size:13px; margin-top:6px; text-align:center; }
+.save-modal-close { margin-top:20px; padding:10px 28px; border-radius:20px; border:1.5px solid rgba(255,255,255,0.4); background:transparent; color:white; font-size:14px; cursor:pointer; font-family:inherit; }
+.save-modal-close:hover { background:rgba(255,255,255,0.1); }
+
+</style>
 </head>
 <body>
 <div id="root"></div>
@@ -312,7 +320,8 @@ function App() {
     var dragPosS = useState({x:0,y:0}); var dragPos=dragPosS[0],setDragPos=dragPosS[1];
     var histLenS = useState(0);          var histLen=histLenS[0],setHistLen=histLenS[1];
     var zoneSelS = useState('center');    var zoneSel=zoneSelS[0],setZoneSel=zoneSelS[1];
-    var sideS = useState('front');         var side=sideS[0],setSide=sideS[1];
+    var sideS = useState('front');
+    var saveImgUrlS = useState(null); var saveImgUrl=saveImgUrlS[0],setSaveImgUrl=saveImgUrlS[1];         var side=sideS[0],setSide=sideS[1];
     var elemsFrontS = useState([]);         var elemsFront=elemsFrontS[0],setElemsFront=elemsFrontS[1];
     var elemsBackS  = useState([]);         var elemsBack=elemsBackS[0],setElemsBack=elemsBackS[1];
     var exportingS = useState(false);    var exporting=exportingS[0],setExporting=exportingS[1];
@@ -635,15 +644,9 @@ function App() {
             var filename = '판촉에버_시안_'+ds+'.'+fmt;
             var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
             if (isIOS) {
-                /* iOS Safari: <a download> 미지원 → 새 탭에서 열어 길게 눌러 저장 */
-                var win = window.open('', '_blank');
-                if (win) {
-                    win.document.write('<html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;background:#111;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif}img{max-width:100%;border-radius:8px}p{color:#aaa;margin-top:16px;font-size:14px;text-align:center}</style></head><body><img src="'+url+'"><p>이미지를 길게 눌러 저장하세요 📥</p></body></html>');
-                    win.document.close();
-                    toast('✅ 새 탭에서 이미지를 길게 눌러 저장하세요');
-                } else {
-                    toast('⚠️ 팝업이 차단되었습니다. 팝업 허용 후 다시 시도하세요');
-                }
+                /* iOS Safari: 모달로 이미지 표시 → 길게 눌러 저장 */
+                setSaveImgUrl(url);
+                toast('이미지를 길게 눌러 저장하세요 📥');
             } else {
                 var a = document.createElement('a');
                 a.download = filename;
@@ -851,6 +854,7 @@ function App() {
                             );
                         })
                     ),
+                saveImgUrl?h('div',{className:'save-modal-bg',onClick:function(){setSaveImgUrl(null);}},  h('img',{className:'save-modal-img',src:saveImgUrl,alt:'시안 이미지',    onClick:function(e){e.stopPropagation();}}),  h('p',{className:'save-modal-hint'},'이미지를 길게 누르세요'),  h('p',{className:'save-modal-sub'},'사진 저장 → 카메라 롤에 저장됩니다'),  h('button',{className:'save-modal-close',onClick:function(){setSaveImgUrl(null);}},'닫기')):null,
                 refZoom?h('div',{className:'modal-bg',onClick:function(){setRefZoom(null);}},
                     h('div',{className:'ref-zoom-modal',onClick:function(e){e.stopPropagation();}},
                         h('img',{src:refZoom.src,alt:refZoom.name}),
