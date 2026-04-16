@@ -302,10 +302,7 @@ function App() {
     var modeS    = useState('customer'); var mode=modeS[0],setMode=modeS[1];
     var prodsS   = useState(DEMO);       var products=prodsS[0],setProducts=prodsS[1];
     var selPS    = useState(DEMO[0].id); var selProd=selPS[0],setSelProd=selPS[1];
-    var elemsS   = useState([]);
-    // side-aware elems: 정면/후면 각각 별도 상태
-    var elems = side==='front' ? elemsFront : elemsBack;
-    function setElems(fn){ if(side==='front') setElemsFront(fn); else setElemsBack(fn); }
+    var elemsS   = useState([]);         // 훅 순서 유지용 (실제로는 elemsFront/elemsBack 사용)
     var selIdS   = useState(null);       var selId=selIdS[0],setSelId=selIdS[1];
     var modalS   = useState(false);      var showModal=modalS[0],setShowModal=modalS[1];
     var newNameS = useState('');         var newName=newNameS[0],setNewName=newNameS[1];
@@ -324,6 +321,9 @@ function App() {
     var saveImgUrlS = useState(null); var saveImgUrl=saveImgUrlS[0],setSaveImgUrl=saveImgUrlS[1];         var side=sideS[0],setSide=sideS[1];
     var elemsFrontS = useState([]);         var elemsFront=elemsFrontS[0],setElemsFront=elemsFrontS[1];
     var elemsBackS  = useState([]);         var elemsBack=elemsBackS[0],setElemsBack=elemsBackS[1];
+    // side-aware elems: 정면/후면 각각 별도 상태 (반드시 side/elemsFront/elemsBack 정의 후에 위치)
+    var elems = side==='front' ? elemsFront : elemsBack;
+    function setElems(fn){ if(side==='front') setElemsFront(fn); else setElemsBack(fn); }
     var exportingS = useState(false);    var exporting=exportingS[0],setExporting=exportingS[1];
     var refsS      = useState([]);       var refs=refsS[0],setRefs=refsS[1];
     var refZoomS   = useState(null);     var refZoom=refZoomS[0],setRefZoom=refZoomS[1];
@@ -854,7 +854,6 @@ function App() {
                             );
                         })
                     ),
-                saveImgUrl?h('div',{className:'save-modal-bg',onClick:function(){setSaveImgUrl(null);}},  h('img',{className:'save-modal-img',src:saveImgUrl,alt:'시안 이미지',    onClick:function(e){e.stopPropagation();}}),  h('p',{className:'save-modal-hint'},'이미지를 길게 누르세요'),  h('p',{className:'save-modal-sub'},'사진 저장 → 카메라 롤에 저장됩니다'),  h('button',{className:'save-modal-close',onClick:function(){setSaveImgUrl(null);}},'닫기')):null,
                 refZoom?h('div',{className:'modal-bg',onClick:function(){setRefZoom(null);}},
                     h('div',{className:'ref-zoom-modal',onClick:function(e){e.stopPropagation();}},
                         h('img',{src:refZoom.src,alt:refZoom.name}),
@@ -1161,7 +1160,13 @@ function App() {
         ),
         prodBar,
         h('div',{className:'main'},renderCanvas(),renderPanel()),
-        modal
+        modal,
+        saveImgUrl?h('div',{className:'save-modal-bg',onClick:function(){setSaveImgUrl(null);}},
+            h('img',{className:'save-modal-img',src:saveImgUrl,alt:'시안 이미지',onClick:function(e){e.stopPropagation();}}),
+            h('p',{className:'save-modal-hint'},'이미지를 길게 누르세요'),
+            h('p',{className:'save-modal-sub'},'사진 저장 → 카메라 롤에 저장됩니다'),
+            h('button',{className:'save-modal-close',onClick:function(){setSaveImgUrl(null);}},'닫기')
+        ):null
     );
 }
 
