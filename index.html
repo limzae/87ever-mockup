@@ -321,6 +321,8 @@ function App() {
     var saveImgUrlS = useState(null); var saveImgUrl=saveImgUrlS[0],setSaveImgUrl=saveImgUrlS[1];         var side=sideS[0],setSide=sideS[1];
     var elemsFrontS = useState([]);         var elemsFront=elemsFrontS[0],setElemsFront=elemsFrontS[1];
     var elemsBackS  = useState([]);         var elemsBack=elemsBackS[0],setElemsBack=elemsBackS[1];
+    var elems = side==='front' ? elemsFront : elemsBack;
+    function setElems(fn){ if(side==='front') setElemsFront(fn); else setElemsBack(fn); }
     // side-aware elems: 정면/후면 각각 별도 상태 (반드시 side/elemsFront/elemsBack 정의 후에 위치)
     var elems = side==='front' ? elemsFront : elemsBack;
     function setElems(fn){ if(side==='front') setElemsFront(fn); else setElemsBack(fn); }
