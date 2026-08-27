@@ -1,0 +1,39 @@
+name: Fetch wordmark study page
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch page and same-origin assets
+        run: |
+          set -e
+          BASE="https://haangift-wordmark-study.limzae.chatgpt.site"
+          mkdir -p _fetched/assets
+          curl -fsSL --retry 3 --retry-delay 2 "$BASE/" -o _fetched/index.html
+          grep -oE '(src|href)="[^"]+"' _fetched/index.html \
+            | sed -E 's/^(src|href)="//; s/"$//' | sort -u > _fetched/urls.txt || true
+          while read -r u; do
+            case "$u" in
+              "$BASE"*) path="${u#"$BASE"}"; path="${path#/}" ;;
+              http*|//*|data:*|'#'*|mailto:*|javascript:*) continue ;;
+              /*) path="${u#/}" ;;
+              *) path="$u" ;;
+            esac
+            [ -z "$path" ] && continue
+            mkdir -p "_fetched/assets/$(dirname "$path")"
+            curl -fsSL --retry 2 "$BASE/$path" -o "_fetched/assets/$path" \
+              || echo "failed: $path" >> _fetched/failed.txt
+          done < _fetched/urls.txt
+      - name: Commit results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add _fetched
+          git commit -m "Fetch wordmark study page snapshot"
+          git push
