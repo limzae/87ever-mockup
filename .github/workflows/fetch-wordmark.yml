@@ -1,6 +1,11 @@
 name: Fetch wordmark study page
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - claude/haangift-wordmark-study-rca77u
+    paths:
+      - .github/workflows/fetch-wordmark.yml
 
 permissions:
   contents: write
